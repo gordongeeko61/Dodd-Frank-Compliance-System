@@ -1,18 +1,20 @@
 from pydantic import BaseModel, HttpUrl
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from backend.src.graph.state import ComplianceIssue
+from backend.src.graph.state import ComplianceViolation
 
-class AuditRequest(BaseModel):
+
+class SurveillanceRequest(BaseModel):
     video_url: HttpUrl
+    call_id: Optional[str] = None   # e.g. "trader-desk-3-2024-06-04-143022"; auto-generated if omitted
 
 
-
-
-class AuditResponse(BaseModel):
+class SurveillanceResponse(BaseModel):
     session_id: str
-    video_id: str
-    final_status: Optional[str]
-    compliance_results: List[ComplianceIssue]
+    call_id: str
+    final_status: Optional[str]             # CLEAR | REVIEW | ESCALATE
+    flagged_entities: List[str]             # tickers / companies mentioned
+    compliance_violations: List[ComplianceViolation]
+    call_metadata: Optional[Dict[str, Any]] # participants, platform, duration
     final_report: Optional[str]
     errors: List[str]

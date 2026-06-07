@@ -1,36 +1,35 @@
 import operator
-from typing import Any, Dict, List, Optional,Annotated, TypedDict
+from typing import Any, Dict, List, Optional, Annotated, TypedDict
 
-# def scheme for compliance result
-# error report 
-class ComplianceIssue(TypedDict):
-    category: str
-    description: str # specific violation details
-    severity: str # critical | warning
-    time: Optional[str]
 
-# define the global graph state
-# this defines the state that gets passed around in th agentic workflow 
-class VideoAuditState(TypedDict):
-    '''
-    Defines the data scheme for langgraph exceution content
-    main store where it contains all the data related to the video audit process, from ingestion, extraction, compliance checking and final report generation.
-    '''
-    #inputs
+class ComplianceViolation(TypedDict):
+    category: str       # MNPI Disclosure | Unauthorized Investment Advice | Market Manipulation | Front-Running | Restricted Securities | Recordkeeping Violation
+    regulation: str     # SEC Rule 10b-5 | Dodd-Frank Section X | FINRA Rule 2010 | etc.
+    severity: str       # CRITICAL | HIGH | MEDIUM | LOW
+    description: str    # specific violation details with evidence from transcript
+    timestamp: Optional[str]  # HH:MM:SS in the call where the violation occurred
+
+
+class CallSurveillanceState(TypedDict):
+    """
+    LangGraph execution state for Dodd-Frank communications surveillance.
+    Tracks the full lifecycle: call ingestion → transcript extraction → trade surveillance → report.
+    """
+    # inputs
     video_url: str
-    video_id: str
+    call_id: str
 
-    #ingestion and exxtarction data
+    # ingestion and extraction
     local_file_path: Optional[str]
-    video_metadata: Dict[str, Any]
-    transcript: Optional[str]
-    ocr_text: List[str]
+    call_metadata: Dict[str, Any]   # participants, platform, duration, date, speaker_map
+    transcript: Optional[str]       # speaker-attributed transcript
+    ocr_text: List[str]             # Bloomberg terminal, spreadsheet, chart text captured on screen
 
-    compliance_results: Annotated[List[ComplianceIssue],operator.add]
+    # surveillance findings
+    flagged_entities: List[str]     # restricted tickers / securities / company names mentioned
+    compliance_violations: Annotated[List[ComplianceViolation], operator.add]
 
-    final_status: str # pass || fail
-    final_report: str # markdown format 
+    final_status: str    # CLEAR | REVIEW | ESCALATE
+    final_report: str    # detailed surveillance report in markdown
 
-    #list of system erros 
-    errors: Annotated[List[str],operator.add] 
-
+    errors: Annotated[List[str], operator.add]
